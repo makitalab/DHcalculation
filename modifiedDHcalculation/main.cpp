@@ -18,7 +18,6 @@ const int xArm6StandardDH = 0;
 
 int main(void) {
 	DHCalc dh;
-	int num_joint = 0;
 	double t2_offset = 0.0;
 	double t3_offset = 0.0;
 	bool dh_standard = false;
@@ -58,22 +57,22 @@ int main(void) {
 			std::getline(fs, str); // str == "num_joint"
 			std::cout << "reading" + str << std::endl;
 			std::getline(fs, str); // str == the value of num_joint
-			num_joint = atoi(str.c_str());
+			params.num_joint = atoi(str.c_str());
 			std::getline(fs, str); // str == "alpha"
-			std::cout << "reading" + str << std::endl;
-			for (i = 0; i < num_joint; i++) {
+			std::cout << "reading " + str << std::endl;
+			for (i = 0; i < params.num_joint; i++) {
 				std::getline(fs, str);
 				params.alpha.push_back(atof(str.c_str()));
 			}
 			std::getline(fs, str); // str == "a_shift"
-			std::cout << "reading" + str << std::endl;
-			for (i = 0; i < num_joint; i++) {
+			std::cout << "reading " + str << std::endl;
+			for (i = 0; i < params.num_joint; i++) {
 				std::getline(fs, str);
 				params.a_shift.push_back(atof(str.c_str()));
 			}
 			std::getline(fs, str); // str == "d_shift"
-			std::cout << "reading" + str << std::endl;
-			for (i = 0; i < num_joint; i++) {
+			std::cout << "reading " + str << std::endl;
+			for (i = 0; i < params.num_joint; i++) {
 				std::getline(fs, str);
 				params.d_shift.push_back(atof(str.c_str()));
 			}
@@ -95,41 +94,27 @@ int main(void) {
 
 	std::vector<double> j_pos(dim*params.num_joint);
 	dh.matIdentify(htm);
-	for (i = 0; i < num_joint; i++) {
-		if (dh_modified) {
-			dh.matCopy(htm, tmpm1);
-			dh.rotX(params.alpha[i], tmpm2);
-			dh.matxMat(tmpm1, tmpm2, htm);
-			dh.matCopy(htm, tmpm1);
-			dh.transX(params.a_shift[i], tmpm2);
-			dh.matxMat(tmpm1, tmpm2, htm);
-			dh.matCopy(htm, tmpm1);
-			dh.rotZ(params.theta[i], tmpm2);
-			dh.matxMat(tmpm1, tmpm2, htm);
-			dh.matCopy(htm, tmpm1);
-			dh.transZ(params.d_shift[i], tmpm2);
-			dh.matxMat(tmpm1, tmpm2, htm);
-		}
-		else if (dh_standard) {
-			dh.matCopy(htm, tmpm1);
-			dh.rotZ(params.theta[i], tmpm2);
-			dh.matxMat(tmpm1, tmpm2, htm);
-			dh.matCopy(htm, tmpm1);
-			dh.transZ(params.d_shift[i], tmpm2);
-			dh.matxMat(tmpm1, tmpm2, htm);
-			dh.matCopy(htm, tmpm1);
-			dh.rotX(params.alpha[i], tmpm2);
-			dh.matxMat(tmpm1, tmpm2, htm);
-			dh.matCopy(htm, tmpm1);
-			dh.transX(params.a_shift[i], tmpm2);
-			dh.matxMat(tmpm1, tmpm2, htm);
-		}
-		for (k = 0; k < dim; k++) {
-			j_pos.push_back(htm[k][3]);
-		}
-		printf_s("joint_position %d ( %7.3f, %7.3f, %7.3f )\n", i, j_pos[i*dim + 0], j_pos[i * dim + 1], j_pos[i * dim + 2]);
+	if (dh_modified) {
+		dh.dhModified(htm, params, j_pos);
 	}
-	
+	else if (dh_standard) {
+		dh.dhStandard(htm, params, j_pos);
+	}
+	for (i = 0; i < params.num_joint; i++) {
+		printf_s("joint_position %d (", i + 1);
+		for (k = 0; k < dim; k++) {
+			printf_s("%7.3f", j_pos[i * dim + k]);
+			if (k == dim -1) {
+				printf_s(")\n");
+			}
+			else {
+				printf_s(", ");
+			}
+		}
+	}
+	//printf_s("joint_position %d ( %7.3f, %7.3f, %7.3f )\n", i, j_pos[i * dim + 0], j_pos[i * dim + 1], j_pos[i * dim + 2]);
+
+
 	printf_s("Homogeneous Translation Matrix is\n");
 	for (i = 0; i < dh.matsize; i++) {
 		for (k = 0; k < dh.matsize; k++) {

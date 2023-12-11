@@ -40,8 +40,8 @@ public:
 	int transX(double a_shift, std::vector<std::vector<double>>& mat);
 	int rotZ(double theta, std::vector<std::vector<double>>& mat);
 	int rotX(double alpha, std::vector<std::vector<double>>& mat);
-	int dhStandard(std::vector<std::vector<double>>& htm, DHParams params);
-	int dhModified(std::vector<std::vector<double>>& htm, DHParams params);
+	int dhStandard(std::vector<std::vector<double>>& htm, DHParams params, std::vector<double>& joint_pos);
+	int dhModified(std::vector<std::vector<double>>& htm, DHParams params, std::vector<double>& joint_pos);
 private:
 private:
 
@@ -130,40 +130,47 @@ int DHCalc::rotX(double alpha, std::vector<std::vector<double>>& mat) {
 	return 0;
 }
 
-int DHCalc::dhStandard(std::vector<std::vector<double>>& htm, DHParams params) {
+int DHCalc::dhStandard(std::vector<std::vector<double>>& htm, DHParams params, std::vector<double>& joint_pos) {
 	std::vector<std::vector<double>> tmpm1(DHCalc::matsize, std::vector<double>(DHCalc::matsize)), tmpm2(DHCalc::matsize, std::vector<double>(DHCalc::matsize));
 	for (int i = 0; i < params.num_joint; i++) {
-		DHCalc::matCopy(htm, tmpm1);
-		DHCalc::rotX(params.alpha[i], tmpm2);
-		DHCalc::matxMat(tmpm1, tmpm2, htm);
-		DHCalc::matCopy(htm, tmpm1);
-		DHCalc::transX(params.a_shift[i], tmpm2);
-		DHCalc::matxMat(tmpm1, tmpm2, htm);
 		DHCalc::matCopy(htm, tmpm1);
 		DHCalc::rotZ(params.theta[i], tmpm2);
 		DHCalc::matxMat(tmpm1, tmpm2, htm);
 		DHCalc::matCopy(htm, tmpm1);
 		DHCalc::transZ(params.d_shift[i], tmpm2);
 		DHCalc::matxMat(tmpm1, tmpm2, htm);
+		DHCalc::matCopy(htm, tmpm1);
+		DHCalc::rotX(params.alpha[i], tmpm2);
+		DHCalc::matxMat(tmpm1, tmpm2, htm);
+		DHCalc::matCopy(htm, tmpm1);
+		DHCalc::transX(params.a_shift[i], tmpm2);
+		DHCalc::matxMat(tmpm1, tmpm2, htm);
+		for (int k = 0; k < DHCalc::matsize - 1; k++) {
+			joint_pos.push_back(htm[k][DHCalc::matsize - 1]);
+		}
 	}
 	return 0;
 }
 
-int DHCalc::dhModified(std::vector<std::vector<double>>& htm, DHParams params) {
+int DHCalc::dhModified(std::vector<std::vector<double>>& htm, DHParams params, std::vector<double>& joint_pos) {
 	std::vector<std::vector<double>> tmpm1(DHCalc::matsize, std::vector<double>(DHCalc::matsize)), tmpm2(DHCalc::matsize, std::vector<double>(DHCalc::matsize));
+	joint_pos.clear();
 	for (int i = 0; i < params.num_joint; i++) {
-		DHCalc::matCopy(htm, tmpm1);
-		DHCalc::rotZ(params.theta[i], tmpm2);
-		DHCalc::matxMat(tmpm1, tmpm2, htm);
-		DHCalc::matCopy(htm, tmpm1);
-		DHCalc::transZ(params.d_shift[i], tmpm2);
-		DHCalc::matxMat(tmpm1, tmpm2, htm);
 		DHCalc::matCopy(htm, tmpm1);
 		DHCalc::rotX(params.alpha[i], tmpm2);
 		DHCalc::matxMat(tmpm1, tmpm2, htm);
 		DHCalc::matCopy(htm, tmpm1);
 		DHCalc::transX(params.a_shift[i], tmpm2);
 		DHCalc::matxMat(tmpm1, tmpm2, htm);
+		DHCalc::matCopy(htm, tmpm1);
+		DHCalc::rotZ(params.theta[i], tmpm2);
+		DHCalc::matxMat(tmpm1, tmpm2, htm);
+		DHCalc::matCopy(htm, tmpm1);
+		DHCalc::transZ(params.d_shift[i], tmpm2);
+		DHCalc::matxMat(tmpm1, tmpm2, htm);
+		for (int k = 0; k < DHCalc::matsize - 1; k++) {
+			joint_pos.push_back(htm[k][DHCalc::matsize - 1]);
+		}
 	}
 	return 0;
 }
