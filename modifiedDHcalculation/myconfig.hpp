@@ -40,6 +40,7 @@ public:
 	int transX(double a_shift, std::vector<std::vector<double>>& mat);
 	int rotZ(double theta, std::vector<std::vector<double>>& mat);
 	int rotX(double alpha, std::vector<std::vector<double>>& mat);
+	int readParams(DHParams& params, std::string filename);
 	int dhStandard(std::vector<std::vector<double>>& htm, DHParams params, std::vector<double>& joint_pos);
 	int dhModified(std::vector<std::vector<double>>& htm, DHParams params, std::vector<double>& joint_pos);
 private:
@@ -130,8 +131,44 @@ int DHCalc::rotX(double alpha, std::vector<std::vector<double>>& mat) {
 	return 0;
 }
 
+int readParams(DHParams& params, std::string filename) {
+	std::ifstream fs{};
+	std::string str;
+	int i;
+	fs.open(filename);
+	if (fs.fail()) {
+		std::cerr << "Failed to open DH parameter file." << std::endl;
+		return -1;
+	}
+	else {
+		std::getline(fs, str); // str == "num_joint"
+		std::cout << "reading" + str << std::endl;
+		std::getline(fs, str); // str == the value of num_joint
+		params.num_joint = atoi(str.c_str());
+		std::getline(fs, str); // str == "alpha"
+		std::cout << "reading " + str << std::endl;
+		for (i = 0; i < params.num_joint; i++) {
+			std::getline(fs, str);
+			params.alpha.push_back(atof(str.c_str()));
+		}
+		std::getline(fs, str); // str == "a_shift"
+		std::cout << "reading " + str << std::endl;
+		for (i = 0; i < params.num_joint; i++) {
+			std::getline(fs, str);
+			params.a_shift.push_back(atof(str.c_str()));
+		}
+		std::getline(fs, str); // str == "d_shift"
+		std::cout << "reading " + str << std::endl;
+		for (i = 0; i < params.num_joint; i++) {
+			std::getline(fs, str);
+			params.d_shift.push_back(atof(str.c_str()));
+		}
+	}
+}
+
 int DHCalc::dhStandard(std::vector<std::vector<double>>& htm, DHParams params, std::vector<double>& joint_pos) {
 	std::vector<std::vector<double>> tmpm1(DHCalc::matsize, std::vector<double>(DHCalc::matsize)), tmpm2(DHCalc::matsize, std::vector<double>(DHCalc::matsize));
+	joint_pos.clear();
 	for (int i = 0; i < params.num_joint; i++) {
 		DHCalc::matCopy(htm, tmpm1);
 		DHCalc::rotZ(params.theta[i], tmpm2);

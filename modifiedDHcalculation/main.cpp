@@ -10,11 +10,24 @@
 
 /***********************************************
 Calculate Homogeneous Translate Matrix with standard/modified Denavit-Hartenberg (DH) parameters
+1) Select your robot and its DH parameters
+2) Make a CSV file containing the DH parameters with the following format
+	text: number of joints
+	value
+	text: alpha
+	values
+	text: a_shift
+	values
+	text: d_shift
+	values
 
 ************************************************/
 
-const int xArm6ModifiedDH = 1;
-const int xArm6StandardDH = 0;
+/*****************************************
+Select your robot and its DH parameters
+******************************************/
+const bool xArm6ModifiedDH = false;
+const bool xArm6StandardDH = true;
 
 int main(void) {
 	DHCalc dh;
@@ -22,69 +35,37 @@ int main(void) {
 	double t3_offset = 0.0;
 	bool dh_standard = false;
 	bool dh_modified = false;
-/*
-	if (xArm6ModifiedDH) {
-		num_joint = 6;
-		t2_offset = -1.0 * atan2(284.5, 53.5);
-		t3_offset = -1.0 * t2_offset;
-		dh_modified = 1;
-	}
-	else if (xArm6StandardDH) {
-		num_joint = 6;
-		t2_offset = -1.0 * atan2(284.5, 53.5);
-		t3_offset = -1.0 * t2_offset;
-		dh_standard = 1;
-	}
-	else {
-		num_joint = 0;
-	}
-	*/
 	const int dim = 3;
 	DHParams params;
 	std::vector<std::vector<double>> htm(dh.matsize, std::vector<double>(dh.matsize));
 	std::vector<std::vector<double>> tmpm1(dh.matsize, std::vector<double>(dh.matsize)), tmpm2(dh.matsize, std::vector<double>(dh.matsize));
 	int i, k, count;
-	std::ifstream fs{};
-	std::string str;
-
+	std::string filename;
+	
+	/*************************************
+	Read the file of DH parameters 
+	**************************************/
 	if (xArm6ModifiedDH) {
-		fs.open("xArm6ModifiedDHParameters.csv");
-		if (fs.fail()) {
-			std::cerr << "Failed to open DH parameter file." << std::endl;
-			return -1;
-		}
-		else {
-			std::getline(fs, str); // str == "num_joint"
-			std::cout << "reading" + str << std::endl;
-			std::getline(fs, str); // str == the value of num_joint
-			params.num_joint = atoi(str.c_str());
-			std::getline(fs, str); // str == "alpha"
-			std::cout << "reading " + str << std::endl;
-			for (i = 0; i < params.num_joint; i++) {
-				std::getline(fs, str);
-				params.alpha.push_back(atof(str.c_str()));
-			}
-			std::getline(fs, str); // str == "a_shift"
-			std::cout << "reading " + str << std::endl;
-			for (i = 0; i < params.num_joint; i++) {
-				std::getline(fs, str);
-				params.a_shift.push_back(atof(str.c_str()));
-			}
-			std::getline(fs, str); // str == "d_shift"
-			std::cout << "reading " + str << std::endl;
-			for (i = 0; i < params.num_joint; i++) {
-				std::getline(fs, str);
-				params.d_shift.push_back(atof(str.c_str()));
-			}
-		}
+		filename = "xArm6ModifiedDHParameters.csv";
+		readParams(params, filename);
+		
 		dh_modified = true;
 		t2_offset = -1.0 * std::atan2(284.5, 53.5);
 		t3_offset = -1.0 * t2_offset;
 	}
 	else if (xArm6StandardDH) {
+		filename = "xArm6StandardDHParameters.csv";
+		readParams(params, filename);
+		
 		dh_standard = true;
+		t2_offset = -1.0 * std::atan2(284.5, 53.5);
+		t3_offset = -1.0 * t2_offset;
 	}
 
+	/*************************************
+	Set each joint variable
+	**************************************/
+	params.theta.clear();
 	params.theta.push_back(0.0);
 	params.theta.push_back(t2_offset);
 	params.theta.push_back(t3_offset);
@@ -100,6 +81,10 @@ int main(void) {
 	else if (dh_standard) {
 		dh.dhStandard(htm, params, j_pos);
 	}
+
+	/*************************************
+	Print every joint position
+	**************************************/
 	for (i = 0; i < params.num_joint; i++) {
 		printf_s("joint_position %d (", i + 1);
 		for (k = 0; k < dim; k++) {
@@ -112,9 +97,10 @@ int main(void) {
 			}
 		}
 	}
-	//printf_s("joint_position %d ( %7.3f, %7.3f, %7.3f )\n", i, j_pos[i * dim + 0], j_pos[i * dim + 1], j_pos[i * dim + 2]);
 
-
+	/***************************************************************
+	Print homogeneous translation matrix of end of the manipulator from the base
+	***************************************************************/
 	printf_s("Homogeneous Translation Matrix is\n");
 	for (i = 0; i < dh.matsize; i++) {
 		for (k = 0; k < dh.matsize; k++) {
