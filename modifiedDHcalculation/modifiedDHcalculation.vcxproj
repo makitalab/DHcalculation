@@ -24,7 +24,7 @@
     <ProjectGuid>{089012aa-a20a-4ead-abf9-4c6e94d9cd43}</ProjectGuid>
     <RootNamespace>modifiedDHcalculation</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>modifiedDHcalculation</ProjectName>
+    <ProjectName>DHcalculation</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
