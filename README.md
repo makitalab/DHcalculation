@@ -2,7 +2,7 @@
 
 Calculate Homogeneous Translate Matrix with standard/modified Denavit-Hartenberg (DH) parameters
 - Select your robot and its DH parameters
-- Make a CSV file containing the DH parameters with the following format
+- Make a CSV file containing the DH parameters with the following format (See a sample file)
 
  text: number of joints
  
