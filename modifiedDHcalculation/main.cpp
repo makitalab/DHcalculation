@@ -26,8 +26,8 @@ Calculate Homogeneous Translate Matrix with standard/modified Denavit-Hartenberg
 /*****************************************
 Select your robot and its DH parameters
 ******************************************/
-const bool xArm6ModifiedDH = false;
-const bool xArm6StandardDH = true;
+const bool xArm6ModifiedDH = true;
+const bool xArm6StandardDH = false;
 
 int main(void) {
 	DHCalc dh;
@@ -39,7 +39,7 @@ int main(void) {
 	DHParams params;
 	std::vector<std::vector<double>> htm(dh.matsize, std::vector<double>(dh.matsize));
 	std::vector<std::vector<double>> tmpm1(dh.matsize, std::vector<double>(dh.matsize)), tmpm2(dh.matsize, std::vector<double>(dh.matsize));
-	int i, k, count;
+	int i, k;
 	std::string filename;
 	
 	/*************************************
@@ -74,6 +74,7 @@ int main(void) {
 	params.theta.push_back(0.0);
 
 	std::vector<double> j_pos(dim*params.num_joint);
+	std::vector<std::vector<double>> jacobian(dim, std::vector<double>(params.num_joint));
 	dh.matIdentify(htm);
 	if (dh_modified) {
 		dh.dhModified(htm, params, j_pos);
@@ -111,5 +112,19 @@ int main(void) {
 				printf_s(", ");
 		}
 	}
+
+	Calc_Jacobian3x6(jacobian, params);
+	printf_s("Jacobian Matrix is\n");
+	for (i = 0; i < dim; i++) {
+		for (k = 0; k < params.num_joint; k++) {
+			printf_s("%7.3f", jacobian[i][k]);
+			if (k == params.num_joint - 1)
+				printf_s("\n");
+			else
+				printf_s(", ");
+		}
+	}
+
+
 	return 0;
 }
