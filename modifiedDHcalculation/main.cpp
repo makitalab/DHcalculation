@@ -26,30 +26,53 @@ Calculate Homogeneous Translate Matrix with standard/modified Denavit-Hartenberg
 /*****************************************
 Select your robot and its DH parameters
 ******************************************/
-const bool xArm6ModifiedDH = true;
+
+const bool xArm5ModifiedDH = true;
+const bool xArm5StandardDH = false;
+const bool xArm6ModifiedDH = false;
 const bool xArm6StandardDH = false;
 
 int main(void) {
 	DHCalc dh;
-	double t2_offset = 0.0;
-	double t3_offset = 0.0;
-	bool dh_standard = false;
-	bool dh_modified = false;
 	const int dim = 3;
 	DHParams params;
 	std::vector<std::vector<double>> htm(dh.matsize, std::vector<double>(dh.matsize));
 	std::vector<std::vector<double>> tmpm1(dh.matsize, std::vector<double>(dh.matsize)), tmpm2(dh.matsize, std::vector<double>(dh.matsize));
 	int i, k;
 	std::string filename;
-	
+
+	/* for xArm ***********/
+	double t2_offset = 0.0;
+	double t3_offset = 0.0;
+	double t4_offset = 0.0;
+	/**********************/
+
 	/*************************************
 	Read the file of DH parameters 
 	**************************************/
-	if (xArm6ModifiedDH) {
+	if (xArm5ModifiedDH) {
+		filename = "xArm5ModifiedDHParameters.csv";
+		readParams(params, filename);
+
+		params.dh_modified = true;
+		t2_offset = -1.0 * std::atan2(284.5, 53.5);
+		t4_offset = -1.0 * std::atan2(342.5, 77.5);
+		t3_offset = -1.0 * (t2_offset + t4_offset);
+	}
+	else if (xArm5StandardDH) {
+		filename = "xArm5StandardDHParameters.csv";
+		readParams(params, filename);
+
+		params.dh_standard = true;
+		t2_offset = -1.0 * std::atan2(284.5, 53.5);
+		t4_offset = -1.0 * std::atan2(342.5, 77.5);
+		t3_offset = -1.0 * (t2_offset + t4_offset);
+	}
+	else if (xArm6ModifiedDH) {
 		filename = "xArm6ModifiedDHParameters.csv";
 		readParams(params, filename);
 		
-		dh_modified = true;
+		params.dh_modified = true;
 		t2_offset = -1.0 * std::atan2(284.5, 53.5);
 		t3_offset = -1.0 * t2_offset;
 	}
@@ -57,29 +80,47 @@ int main(void) {
 		filename = "xArm6StandardDHParameters.csv";
 		readParams(params, filename);
 		
-		dh_standard = true;
+		params.dh_standard = true;
 		t2_offset = -1.0 * std::atan2(284.5, 53.5);
 		t3_offset = -1.0 * t2_offset;
+	}
+	else {
+		std::cerr << "Failed! DH standard/modifed mode is not selected: Reading DH parameters in main function." << std::endl;
+		return -1;
 	}
 
 	/*************************************
 	Set each joint variable
 	**************************************/
-	params.theta.clear();
-	params.theta.push_back(0.0);
-	params.theta.push_back(t2_offset);
-	params.theta.push_back(t3_offset);
-	params.theta.push_back(0.0);
-	params.theta.push_back(0.0);
-	params.theta.push_back(0.0);
+	if (xArm5ModifiedDH || xArm5StandardDH) {
+		params.theta.clear();
+		params.theta.push_back(0.0);
+		params.theta.push_back(t2_offset);
+		params.theta.push_back(t3_offset);
+		params.theta.push_back(t4_offset);
+		params.theta.push_back(0.0);
+	}
+	else if(xArm6ModifiedDH || xArm6StandardDH)
+	{
+		params.theta.clear();
+		params.theta.push_back(0.0);
+		params.theta.push_back(t2_offset);
+		params.theta.push_back(t3_offset);
+		params.theta.push_back(0.0);
+		params.theta.push_back(0.0);
+		params.theta.push_back(0.0);
+	}
+	else {
+
+	}
 
 	std::vector<double> j_pos(dim*params.num_joint);
 	std::vector<std::vector<double>> jacobian(dim, std::vector<double>(params.num_joint));
 	dh.matIdentify(htm);
-	if (dh_modified) {
+	if (params.dh_modified) {
 		dh.dhModified(htm, params, j_pos);
 	}
-	else if (dh_standard) {
+	else if (params.dh_standard) {
 		dh.dhStandard(htm, params, j_pos);
 	}
 
@@ -113,7 +154,7 @@ int main(void) {
 		}
 	}
 
-	Calc_Jacobian3x6(jacobian, params);
+	jacobianMatCalc(jacobian, params);
 	printf_s("Jacobian Matrix is\n");
 	for (i = 0; i < dim; i++) {
 		for (k = 0; k < params.num_joint; k++) {
