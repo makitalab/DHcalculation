@@ -138,6 +138,8 @@
     <None Include="xArm5StandardDHParameters.csv" />
     <None Include="xArm6StandardDHParameters.csv" />
     <None Include="xArm6ModifiedDHParameters.csv" />
+    <None Include="xArm7ModifiedDHParameters.csv" />
+    <None Include="xArm7StandardDHParameters.csv" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

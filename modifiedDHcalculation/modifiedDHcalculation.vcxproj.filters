@@ -29,5 +29,7 @@
     <None Include="xArm6ModifiedDHParameters.csv" />
     <None Include="xArm5StandardDHParameters.csv" />
     <None Include="xArm5ModifiedDHParameters.csv" />
+    <None Include="xArm7StandardDHParameters.csv" />
+    <None Include="xArm7ModifiedDHParameters.csv" />
   </ItemGroup>
 </Project>
